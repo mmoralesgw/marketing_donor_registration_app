@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Donor Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        label .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        textarea,
+        select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .donation-type {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .radio-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .merchandise-options {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .merchandise-options.active {
+            display: grid;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-option:hover {
+            background: #f8f9fa;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-option input[type="checkbox"]:checked + span {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .btn-download {
+            background: #28a745;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-download:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .donation-type {
+                flex-direction: column;
+            }
+
+            .merchandise-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h1>Marketing Donor Management System</h1>
+            <a href="settings.html" style="background: #6c757d; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">⚙️ Settings</a>
+        </div>
+        <p class="subtitle">Record donor information and donation details</p>
+
+        <div id="successMessage" class="success-message">
+            Donation recorded successfully! Receipt sent to donor's email.
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <form id="donorForm">
+            <!-- Personal Information -->
+            <div class="form-section">
+                <h2 class="section-title">Personal Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name <span class="required">*</span></label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name <span class="required">*</span></label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number <span class="required">*</span></label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Address <span class="required">*</span></label>
+                        <textarea id="address" name="address" required></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donation Information -->
+            <div class="form-section">
+                <h2 class="section-title">Donation Information</h2>
+                <div class="form-group">
+                    <label>Donation Type <span class="required">*</span></label>
+                    <div class="donation-type">
+                        <div class="radio-option">
+                            <input type="radio" id="cash" name="donationType" value="cash" required>
+                            <label for="cash">Cash</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="merchandise" name="donationType" value="merchandise">
+                            <label for="merchandise">Merchandise</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="merchandiseOptions" class="merchandise-options">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="clothing" name="merchandise" value="Clothing">
+                        <span>Clothing</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="books" name="merchandise" value="Books">
+                        <span>Books</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="shoes" name="merchandise" value="Shoes">
+                        <span>Shoes</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="toys" name="merchandise" value="Toys">
+                        <span>Toys</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="accessories" name="merchandise" value="Accessories">
+                        <span>Accessories</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="electronics" name="merchandise" value="Electronics">
+                        <span>Electronics</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="housewares" name="merchandise" value="House Wares">
+                        <span>House Wares</span>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="other" name="merchandise" value="Other">
+                        <span>Other</span>
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Donation Date <span class="required">*</span></label>
+                        <input type="date" id="donationDate" name="donationDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Donation Location <span class="required">*</span></label>
+                        <input type="text" id="location" name="location" placeholder="e.g., Main Office, Drop-off Center" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">Submit Donation</button>
+        </form>
+
+        <button class="btn-download" id="downloadBtn">Download All Donors (CSV)</button>
+    </div>
+
+    <script>
+        const form = document.getElementById('donorForm');
+        const merchandiseRadio = document.getElementById('merchandise');
+        const cashRadio = document.getElementById('cash');
+        const merchandiseOptions = document.getElementById('merchandiseOptions');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // Auto-detect API URL (works for both local and Azure)
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000/api'
+            : '/api';
+
+        // Set today's date as default
+        document.getElementById('donationDate').valueAsDate = new Date();
+
+        // Toggle merchandise options
+        merchandiseRadio.addEventListener('change', function() {
+            if (this.checked) {
+                merchandiseOptions.classList.add('active');
+            }
+        });
+
+        cashRadio.addEventListener('change', function() {
+            if (this.checked) {
+                merchandiseOptions.classList.remove('active');
+                // Uncheck all merchandise checkboxes
+                document.querySelectorAll('input[name="merchandise"]').forEach(cb => cb.checked = false);
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                donationType: document.querySelector('input[name="donationType"]:checked').value,
+                donationDate: document.getElementById('donationDate').value,
+                location: document.getElementById('location').value
+            };
+
+            if (formData.donationType === 'merchandise') {
+                const selectedMerchandise = Array.from(document.querySelectorAll('input[name="merchandise"]:checked'))
+                    .map(cb => cb.value);
+                
+                if (selectedMerchandise.length === 0) {
+                    showError('Please select at least one merchandise type');
+                    return;
+                }
+                formData.merchandiseItems = selectedMerchandise;
+            }
+
+            // Show loading state
+            submitBtn.textContent = 'Processing...';
+            submitBtn.classList.add('loading');
+            errorMessage.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/submit-donation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success message
+                    successMessage.textContent = result.emailSent 
+                        ? 'Donation recorded successfully! Receipt sent to donor\'s email.'
+                        : 'Donation recorded successfully! (Email sending failed - check configuration)';
+                    successMessage.classList.add('show');
+                    setTimeout(() => {
+                        successMessage.classList.remove('show');
+                    }, 5000);
+
+                    // Reset form
+                    form.reset();
+                    merchandiseOptions.classList.remove('active');
+                    document.getElementById('donationDate').valueAsDate = new Date();
+                } else {
+                    showError(result.message || 'Failed to submit donation');
+                }
+            } catch (error) {
+                showError('Error connecting to server. Make sure the Python backend is running.');
+                console.error('Error:', error);
+            } finally {
+                submitBtn.textContent = 'Submit Donation';
+                submitBtn.classList.remove('loading');
+            }
+        });
+
+        // Download CSV
+        downloadBtn.addEventListener('click', async function() {
+            try {
+                window.location.href = `${API_URL}/download-csv`;
+            } catch (error) {
+                showError('Error downloading CSV file');
+                console.error('Error:', error);
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

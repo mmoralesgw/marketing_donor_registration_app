@@ -1,0 +1,140 @@
+# Quick GitHub Commands for Donor Management System
+
+# ============================================
+# INITIAL SETUP (First Time Only)
+# ============================================
+
+# Initialize Git
+git init
+
+# Check what will be committed (verify config.py is NOT listed)
+git status
+
+# Add all files
+git add .
+
+# First commit
+git commit -m "Initial commit: Marketing Donor Management System"
+
+# Connect to GitHub (replace with your repo URL)
+git remote add origin https://github.com/YOUR-USERNAME/donor-management-system.git
+
+# Push to GitHub
+git branch -M main
+git push -u origin main
+
+# ============================================
+# REGULAR UPDATES
+# ============================================
+
+# Check status
+git status
+
+# Add changes
+git add .
+
+# Commit with message
+git commit -m "Your commit message here"
+
+# Push to GitHub
+git push
+
+# ============================================
+# PULLING UPDATES
+# ============================================
+
+# Pull latest changes
+git pull origin main
+
+# ============================================
+# BRANCHING (For Features)
+# ============================================
+
+# Create new branch
+git checkout -b feature/new-feature-name
+
+# Switch branches
+git checkout main
+git checkout feature/new-feature-name
+
+# Push branch to GitHub
+git push -u origin feature/new-feature-name
+
+# Merge branch (after testing)
+git checkout main
+git merge feature/new-feature-name
+git push
+
+# Delete branch
+git branch -d feature/new-feature-name
+
+# ============================================
+# SAFETY CHECKS
+# ============================================
+
+# Verify config.py is ignored
+git status | grep config.py
+# Should return nothing
+
+# Check what's being tracked
+git ls-files
+
+# See ignored files
+git status --ignored
+
+# ============================================
+# EMERGENCY: Accidentally Committed Credentials
+# ============================================
+
+# Remove config.py from Git (keeps local file)
+git rm --cached config.py
+
+# Commit the removal
+git commit -m "Remove config.py from tracking"
+
+# Push
+git push
+
+# IMPORTANT: Rotate all credentials immediately!
+
+# ============================================
+# CLONING (For Team Members)
+# ============================================
+
+# Clone repository
+git clone https://github.com/YOUR-USERNAME/donor-management-system.git
+
+# Enter directory
+cd donor-management-system
+
+# Create config from template
+copy config.example.py config.py
+# (Linux/Mac: cp config.example.py config.py)
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run app
+python app.py
+
+# ============================================
+# USEFUL COMMANDS
+# ============================================
+
+# View commit history
+git log --oneline
+
+# See changes before committing
+git diff
+
+# Undo last commit (keep changes)
+git reset --soft HEAD~1
+
+# Discard local changes
+git checkout -- filename
+
+# View remote URL
+git remote -v
+
+# Update remote URL
+git remote set-url origin https://github.com/NEW-URL.git

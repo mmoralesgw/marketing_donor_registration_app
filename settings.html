@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Marketing Donor Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 13px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .variables {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .variables h3 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .variable-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .variable-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: monospace;
+            color: #667eea;
+            border: 1px solid #e0e0e0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #dc3545;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-reset:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .message {
+            display: none;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .preview {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-top: 15px;
+        }
+
+        .preview h3 {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .preview-content {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Email Settings</h1>
+            <a href="index.html" class="btn-back">← Back to Donor Form</a>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="section">
+            <h2 class="section-title">Email Message Template</h2>
+            
+            <label for="emailTemplate">
+                Customize the email message sent to donors:
+            </label>
+            <textarea id="emailTemplate" placeholder="Loading..."></textarea>
+            
+            <p class="help-text">
+                Use the variables below to personalize the message. They will be automatically replaced with actual donor information.
+            </p>
+
+            <div class="variables">
+                <h3>Available Variables:</h3>
+                <div class="variable-list">
+                    <div class="variable-item">{firstName}</div>
+                    <div class="variable-item">{lastName}</div>
+                    <div class="variable-item">{donationType}</div>
+                    <div class="variable-item">{donationDate}</div>
+                    <div class="variable-item">{location}</div>
+                </div>
+            </div>
+
+            <div class="preview">
+                <h3>Preview (with sample data):</h3>
+                <div class="preview-content" id="previewContent"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-save" id="saveBtn">💾 Save Changes</button>
+                <button class="btn-reset" id="resetBtn">🔄 Reset to Default</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000/api'
+            : '/api';
+
+        const emailTemplate = document.getElementById('emailTemplate');
+        const previewContent = document.getElementById('previewContent');
+        const saveBtn = document.getElementById('saveBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const messageDiv = document.getElementById('message');
+
+        // Load current template
+        async function loadTemplate() {
+            try {
+                const response = await fetch(`${API_URL}/email-template`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    emailTemplate.value = data.template;
+                    updatePreview();
+                } else {
+                    showMessage('Failed to load template', 'error');
+                }
+            } catch (error) {
+                showMessage('Error loading template: ' + error.message, 'error');
+            }
+        }
+
+        // Update preview with sample data
+        function updatePreview() {
+            const template = emailTemplate.value;
+            const preview = template
+                .replace(/{firstName}/g, 'John')
+                .replace(/{lastName}/g, 'Doe')
+                .replace(/{donationType}/g, 'Merchandise')
+                .replace(/{donationDate}/g, 'January 15, 2024')
+                .replace(/{location}/g, 'Main Office');
+            
+            previewContent.textContent = preview;
+        }
+
+        // Save template
+        async function saveTemplate() {
+            saveBtn.textContent = '💾 Saving...';
+            saveBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/email-template`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        template: emailTemplate.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('✅ Email template saved successfully!', 'success');
+                } else {
+                    showMessage('❌ Failed to save template: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error saving template: ' + error.message, 'error');
+            } finally {
+                saveBtn.textContent = '💾 Save Changes';
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Reset to default
+        async function resetTemplate() {
+            if (!confirm('Are you sure you want to reset to the default template? This cannot be undone.')) {
+                return;
+            }
+
+            resetBtn.textContent = '🔄 Resetting...';
+            resetBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/email-template/reset`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    emailTemplate.value = data.template;
+                    updatePreview();
+                    showMessage('✅ Template reset to default!', 'success');
+                } else {
+                    showMessage('❌ Failed to reset template: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error resetting template: ' + error.message, 'error');
+            } finally {
+                resetBtn.textContent = '🔄 Reset to Default';
+                resetBtn.disabled = false;
+            }
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type} show`;
+            setTimeout(() => {
+                messageDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Event listeners
+        emailTemplate.addEventListener('input', updatePreview);
+        saveBtn.addEventListener('click', saveTemplate);
+        resetBtn.addEventListener('click', resetTemplate);
+
+        // Load template on page load
+        loadTemplate();
+    </script>
+</body>
+</html>

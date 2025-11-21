@@ -1,0 +1,100 @@
+# Quick Azure Deployment Commands Reference
+
+# ============================================
+# OPTION 1: Quick Deploy (All-in-One)
+# ============================================
+az webapp up --resource-group goodwill-rg --name goodwill-donor-app --runtime "PYTHON:3.11" --location eastus
+
+# ============================================
+# OPTION 2: Step-by-Step Deployment
+# ============================================
+
+# Login to Azure
+az login
+
+# Create Resource Group
+az group create --name goodwill-rg --location eastus
+
+# Create App Service Plan
+az appservice plan create --name goodwill-plan --resource-group goodwill-rg --sku B1 --is-linux
+
+# Create Web App
+az webapp create --resource-group goodwill-rg --plan goodwill-plan --name goodwill-donor-app --runtime "PYTHON:3.11"
+
+# Set Startup Command
+az webapp config set --resource-group goodwill-rg --name goodwill-donor-app --startup-file "gunicorn --bind=0.0.0.0 --timeout 600 app:app"
+
+# Configure Application Settings (UPDATE VALUES FIRST!)
+az webapp config appsettings set --resource-group goodwill-rg --name goodwill-donor-app --settings \
+  AZURE_TENANT_ID="your-tenant-id" \
+  AZURE_CLIENT_ID="your-client-id" \
+  AZURE_CLIENT_SECRET="your-client-secret" \
+  SENDER_EMAIL="gw-appdev@GoodwillMiami.org" \
+  ORG_NAME="Goodwill Miami" \
+  ORG_ADDRESS="2121 NW 21st Street, Miami, FL 33142" \
+  ORG_TAX_ID="your-tax-id" \
+  ORG_PHONE="your-phone" \
+  ORG_EMAIL="gw-appdev@GoodwillMiami.org"
+
+# Deploy from Local Directory
+az webapp up --resource-group goodwill-rg --name goodwill-donor-app
+
+# ============================================
+# MONITORING & TROUBLESHOOTING
+# ============================================
+
+# View Live Logs
+az webapp log tail --resource-group goodwill-rg --name goodwill-donor-app
+
+# Download Logs
+az webapp log download --resource-group goodwill-rg --name goodwill-donor-app
+
+# Restart App
+az webapp restart --resource-group goodwill-rg --name goodwill-donor-app
+
+# Show App Details
+az webapp show --resource-group goodwill-rg --name goodwill-donor-app
+
+# List Application Settings
+az webapp config appsettings list --resource-group goodwill-rg --name goodwill-donor-app
+
+# ============================================
+# SCALING
+# ============================================
+
+# Scale Up (Change Plan)
+az appservice plan update --name goodwill-plan --resource-group goodwill-rg --sku S1
+
+# Scale Out (Add Instances)
+az appservice plan update --name goodwill-plan --resource-group goodwill-rg --number-of-workers 2
+
+# ============================================
+# CLEANUP (DELETE EVERYTHING)
+# ============================================
+
+# Delete Resource Group (removes everything)
+az group delete --name goodwill-rg --yes --no-wait
+
+# ============================================
+# USEFUL QUERIES
+# ============================================
+
+# Get App URL
+az webapp show --resource-group goodwill-rg --name goodwill-donor-app --query defaultHostName --output tsv
+
+# Get Deployment User
+az webapp deployment user show
+
+# Set Deployment User (if needed)
+az webapp deployment user set --user-name <username> --password <password>
+
+# ============================================
+# GIT DEPLOYMENT
+# ============================================
+
+# Get Git URL
+az webapp deployment source config-local-git --resource-group goodwill-rg --name goodwill-donor-app --query url --output tsv
+
+# Then use:
+# git remote add azure <git-url>
+# git push azure master
