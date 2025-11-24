@@ -15,7 +15,7 @@ donors.csv
 *.pdf
 email_template.txt
 
-# IDE
+# IDEgit commit -m "Initial commit: Marketing Donor Management System"
 .vscode/
 .idea/
 *.swp

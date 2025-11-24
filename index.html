@@ -198,10 +198,14 @@
             display: none;
             background: #d4edda;
             color: #155724;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+            border: 2px solid #28a745;
+            font-size: 15px;
+            line-height: 1.6;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+            animation: slideIn 0.3s ease-out;
         }
 
         .success-message.show {
@@ -212,14 +216,29 @@
             display: none;
             background: #f8d7da;
             color: #721c24;
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
+            border: 2px solid #dc3545;
+            font-size: 15px;
+            line-height: 1.6;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+            animation: slideIn 0.3s ease-out;
         }
 
         .error-message.show {
             display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .btn-download {
@@ -304,8 +323,8 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group full-width">
-                        <label>Address <span class="required">*</span></label>
-                        <textarea id="address" name="address" required></textarea>
+                        <label>Address</label>
+                        <textarea id="address" name="address"></textarea>
                     </div>
                 </div>
             </div>
@@ -456,14 +475,32 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // Show success message
-                    successMessage.textContent = result.emailSent 
-                        ? 'Donation recorded successfully! Receipt sent to donor\'s email.'
-                        : 'Donation recorded successfully! (Email sending failed - check configuration)';
+                    // Build detailed success message
+                    let message = '✅ Donation recorded successfully!\n\n';
+                    
+                    // Email status
+                    if (result.emailSent) {
+                        message += '📧 Receipt sent to donor\'s email\n';
+                    } else {
+                        message += '⚠️ Email sending failed\n';
+                    }
+                    
+                    // Bloomerang status
+                    if (result.bloomerangSynced) {
+                        message += '🔄 Synced to Bloomerang CRM\n';
+                    } else if (result.bloomerangMessage) {
+                        message += `⚠️ Bloomerang: ${result.bloomerangMessage}\n`;
+                    }
+                    
+                    // CSV status
+                    message += '💾 Saved to CSV file';
+                    
+                    successMessage.textContent = message;
+                    successMessage.style.whiteSpace = 'pre-line';
                     successMessage.classList.add('show');
                     setTimeout(() => {
                         successMessage.classList.remove('show');
-                    }, 5000);
+                    }, 8000);
 
                     // Reset form
                     form.reset();
@@ -492,11 +529,12 @@
         });
 
         function showError(message) {
-            errorMessage.textContent = message;
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.style.whiteSpace = 'pre-line';
             errorMessage.classList.add('show');
             setTimeout(() => {
                 errorMessage.classList.remove('show');
-            }, 5000);
+            }, 8000);
         }
     </script>
 </body>

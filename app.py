@@ -16,6 +16,10 @@ from email.mime.base import MIMEBase
 from email import encoders
 import requests
 import base64
+import urllib3
+
+# Suppress SSL warnings when verify_ssl is disabled (for local testing)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Import configuration
 try:
@@ -39,6 +43,10 @@ try:
         from config import EMAIL_MODE as LOCAL_EMAIL_MODE
     except ImportError:
         LOCAL_EMAIL_MODE = 'smtp'
+    try:
+        from config import BLOOMERANG_CONFIG as LOCAL_BLOOMERANG_CONFIG
+    except ImportError:
+        LOCAL_BLOOMERANG_CONFIG = None
 except ImportError:
     # Default configuration if config.py doesn't exist
     ORGANIZATION_INFO = {
@@ -52,6 +60,7 @@ except ImportError:
     LOCAL_EMAIL_CONFIG = None
     LOCAL_GRAPH_CONFIG = None
     LOCAL_EMAIL_MODE = 'smtp'
+    LOCAL_BLOOMERANG_CONFIG = None
 
 # Set PORT and DEBUG with environment variable support
 PORT = int(os.getenv('PORT', PORT if 'PORT' in locals() else 5000))
@@ -93,6 +102,22 @@ else:
         'sender_email': os.getenv('MS_SENDER_EMAIL', '')
     }
 
+# Bloomerang CRM Configuration
+if LOCAL_BLOOMERANG_CONFIG:
+    BLOOMERANG_CONFIG = {
+        'enabled': LOCAL_BLOOMERANG_CONFIG.get('enabled', False),
+        'api_key': os.getenv('BLOOMERANG_API_KEY', LOCAL_BLOOMERANG_CONFIG.get('api_key', '')),
+        'api_url': os.getenv('BLOOMERANG_API_URL', LOCAL_BLOOMERANG_CONFIG.get('api_url', 'https://api.bloomerang.co/v2')),
+        'verify_ssl': LOCAL_BLOOMERANG_CONFIG.get('verify_ssl', True)
+    }
+else:
+    BLOOMERANG_CONFIG = {
+        'enabled': os.getenv('BLOOMERANG_ENABLED', 'false').lower() == 'true',
+        'api_key': os.getenv('BLOOMERANG_API_KEY', ''),
+        'api_url': os.getenv('BLOOMERANG_API_URL', 'https://api.bloomerang.co/v2'),
+        'verify_ssl': os.getenv('BLOOMERANG_VERIFY_SSL', 'true').lower() == 'true'
+    }
+
 # Override organization info with environment variables for Azure App Service
 ORGANIZATION_INFO['name'] = os.getenv('ORG_NAME', ORGANIZATION_INFO.get('name', ''))
 ORGANIZATION_INFO['address'] = os.getenv('ORG_ADDRESS', ORGANIZATION_INFO.get('address', ''))
@@ -131,6 +156,208 @@ def save_to_csv(data):
             data['donationDate'],
             data['location']
         ])
+
+def send_to_bloomerang(data):
+    """Send donor data to Bloomerang CRM"""
+    if not BLOOMERANG_CONFIG.get('enabled'):
+        print("Bloomerang integration is disabled")
+        return {'success': False, 'message': 'Bloomerang integration disabled'}
+    
+    if not BLOOMERANG_CONFIG.get('api_key'):
+        print("Bloomerang API key not configured")
+        return {'success': False, 'message': 'Bloomerang API key not configured'}
+    
+    try:
+        # Prepare constituent data for Bloomerang
+        # Prepare constituent data for Bloomerang
+        # Note: Email and Phone need to be in specific format for Bloomerang API
+        constituent_data = {
+            'Type': 'Individual',
+            'Status': 'Active',
+            'FirstName': data['firstName'],
+            'LastName': data['lastName'],
+            'PrimaryEmail': {
+                'Type': 'Home',
+                'Value': data['email']
+            },
+            'PrimaryPhone': {
+                'Type': 'Mobile',
+                'Number': data['phone']
+            }
+        }
+        
+        # Add address only if provided
+        if data.get('address') and data['address'].strip():
+            constituent_data['PrimaryAddress'] = {
+                'Street': data['address'],
+                'Type': 'Home'
+            }
+        
+        # Check if constituent already exists
+        headers = {
+            'X-API-Key': BLOOMERANG_CONFIG['api_key'],
+            'Content-Type': 'application/json'
+        }
+        
+        # Search for constituent by email
+        # Note: Bloomerang API limits to 50 results per request, so we paginate
+        search_url = f"{BLOOMERANG_CONFIG['api_url']}/constituents"
+        
+        constituent_id = None
+        matching_constituent = None
+        max_pages = 10  # Search up to 500 constituents (10 pages x 50)
+        
+        for page in range(max_pages):
+            search_params = {
+                'skip': page * 50,
+                'take': 50,  # Maximum allowed by Bloomerang
+                'orderBy': 'Id',
+                'orderDirection': 'Desc'
+            }
+            
+            search_response = requests.get(search_url, headers=headers, params=search_params, verify=BLOOMERANG_CONFIG.get('verify_ssl', True))
+            
+            if search_response.status_code == 200:
+                results = search_response.json()['Results']
+                
+                # If no results, we've reached the end
+                if not results or len(results) == 0:
+                    break
+                
+                # Normalize donor data for comparison
+                donor_email = data['email'].lower().strip() if data.get('email') else ''
+                donor_phone = ''.join(filter(str.isdigit, data.get('phone', '')))  # Remove formatting
+                donor_first = data['firstName'].lower().strip()
+                donor_last = data['lastName'].lower().strip()
+                
+                # Filter results using multiple identifiers
+                for constituent in results:
+                    match_score = 0
+                    match_details = []
+                    
+                    # Check email match (highest priority)
+                    # Bloomerang stores email in PrimaryEmail object
+                    constituent_email = ''
+                    primary_email_obj = constituent.get('PrimaryEmail', {})
+                    if isinstance(primary_email_obj, dict):
+                        constituent_email = primary_email_obj.get('Value', '')
+                    
+                    # Also check EmailAddress field (some API versions)
+                    if not constituent_email:
+                        constituent_email = constituent.get('EmailAddress', '')
+                    
+                    if constituent_email and donor_email:
+                        if constituent_email.lower().strip() == donor_email:
+                            match_score += 100  # Email match is strongest
+                            match_details.append('email')
+                    
+                    # Check phone match
+                    # Bloomerang stores phone in PrimaryPhone.Number
+                    constituent_phone = ''
+                    primary_phone_obj = constituent.get('PrimaryPhone', {})
+                    if isinstance(primary_phone_obj, dict):
+                        constituent_phone = primary_phone_obj.get('Number', '')
+                    
+                    # Also check PhoneNumber field (some API versions)
+                    if not constituent_phone:
+                        constituent_phone = constituent.get('PhoneNumber', '')
+                    
+                    if constituent_phone and donor_phone:
+                        # Normalize phone (remove formatting)
+                        normalized_phone = ''.join(filter(str.isdigit, constituent_phone))
+                        if normalized_phone == donor_phone and len(donor_phone) >= 10:
+                            match_score += 50  # Phone match is good
+                            match_details.append('phone')
+                    
+                    # Check name match
+                    constituent_first = (constituent.get('FirstName', '') or '').lower().strip()
+                    constituent_last = (constituent.get('LastName', '') or '').lower().strip()
+                    
+                    if constituent_first == donor_first and constituent_last == donor_last:
+                        match_score += 30  # Name match
+                        match_details.append('name')
+                    
+                    # Strong match: Email OR (Phone + Name)
+                    if match_score >= 80:
+                        matching_constituent = constituent
+                        match_info = ' + '.join(match_details)
+                        print(f"Match found (score: {match_score}, matched: {match_info}): {constituent.get('FullName', 'Unknown')}")
+                        break
+                
+                # If we found a match, stop searching
+                if matching_constituent:
+                    break
+            else:
+                print(f"Search page {page} failed: {search_response.status_code}")
+                break
+        
+        if matching_constituent:
+            # Constituent exists, use existing ID
+            constituent_id = matching_constituent.get('Id')
+            print(f"Found existing constituent: {constituent_id} ({matching_constituent.get('FullName', 'Unknown')})")
+            return {
+                    'success': True,
+                    'constituent_id': constituent_id,
+                    'transaction_id': 0,
+                    'message': f"Found existing constituent"
+                }
+        else:
+            # Not found, create new constituent
+            print(f"No matching constituent found for {data['email']}, creating new...")
+            # Note: Bloomerang uses singular 'constituent' for POST
+            create_url = f"{BLOOMERANG_CONFIG['api_url']}/constituent"
+            create_response = requests.post(create_url, headers=headers, json=constituent_data, verify=BLOOMERANG_CONFIG.get('verify_ssl', True))
+            
+            if create_response.status_code in [200, 201]:
+                result = create_response.json()
+                constituent_id = result.get('Id')
+                print(f"Created new constituent: {constituent_id}")
+                return {
+                    'success': True,
+                    'constituent_id': constituent_id,
+                    'transaction_id': 0,
+                    'message': 'Successfully added to Bloomerang'
+                }
+            else:
+                print(f"Failed to create constituent: {create_response.status_code} - {create_response.text}")
+                return {'success': False, 'message': f'Failed to create constituent: {create_response.text}'}
+        
+        # Create transaction (donation record)
+        # if constituent_id:
+        #     transaction_data = {
+        #         'ConstituentId': constituent_id,
+        #         'Date': data['donationDate'],
+        #         'Amount': 0,  # In-kind donation, no monetary value
+        #         'Method': 'InKind',
+        #         'Fund': 'General',
+        #         'Note': f"Donation Type: {data['donationType']}\nLocation: {data['location']}"
+        #     }
+            
+        #     # Add merchandise details if applicable
+        #     if data['donationType'] == 'merchandise' and data.get('merchandiseItems'):
+        #         transaction_data['Note'] += f"\nItems: {', '.join(data['merchandiseItems'])}"
+            
+        #     transaction_url = f"{BLOOMERANG_CONFIG['api_url']}/transactions"
+        #     transaction_response = requests.post(transaction_url, headers=headers, json=transaction_data, verify=BLOOMERANG_CONFIG.get('verify_ssl', True))
+            
+        #     if transaction_response.status_code in [200, 201]:
+        #         transaction_id = transaction_response.json().get('Id')
+        #         print(f"Created transaction: {transaction_id}")
+        #         return {
+        #             'success': True,
+        #             'constituent_id': constituent_id,
+        #             'transaction_id': transaction_id,
+        #             'message': 'Successfully added to Bloomerang'
+        #         }
+        #     else:
+        #         print(f"Failed to create transaction: {transaction_response.status_code} - {transaction_response.text}")
+        #         return {'success': False, 'message': f'Failed to create transaction: {transaction_response.text}'}
+        
+        # return {'success': False, 'message': 'Failed to get constituent ID'}
+        
+    except Exception as e:
+        print(f"Bloomerang error: {str(e)}")
+        return {'success': False, 'message': str(e)}
 
 def generate_pdf_receipt(data):
     """Generate PDF receipt and return as bytes"""
@@ -347,10 +574,15 @@ def submit_donation():
         # Send email
         email_sent = send_email_with_receipt(data, pdf_buffer)
         
+        # Send to Bloomerang CRM
+        bloomerang_result = send_to_bloomerang(data)
+        
         return jsonify({
             'success': True,
             'message': 'Donation recorded successfully',
-            'emailSent': email_sent
+            'emailSent': email_sent,
+            'bloomerangSynced': bloomerang_result.get('success', False),
+            'bloomerangMessage': bloomerang_result.get('message', '')
         })
     
     except Exception as e:
@@ -519,6 +751,40 @@ def reset_email_template():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/api/bloomerang/test', methods=['POST'])
+def test_bloomerang():
+    """Test Bloomerang CRM connection"""
+    try:
+        if not BLOOMERANG_CONFIG.get('enabled'):
+            return jsonify({'success': False, 'message': 'Bloomerang integration is disabled'}), 400
+        
+        if not BLOOMERANG_CONFIG.get('api_key'):
+            return jsonify({'success': False, 'message': 'Bloomerang API key not configured'}), 400
+        
+        # Test API connection
+        headers = {
+            'X-API-Key': BLOOMERANG_CONFIG['api_key'],
+            'Content-Type': 'application/json'
+        }
+        
+        test_url = f"{BLOOMERANG_CONFIG['api_url']}/constituents?take=1"
+        response = requests.get(test_url, headers=headers)
+        
+        if response.status_code == 200:
+            return jsonify({
+                'success': True,
+                'message': 'Successfully connected to Bloomerang CRM',
+                'api_url': BLOOMERANG_CONFIG['api_url']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': f'Failed to connect: {response.status_code} - {response.text}'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # Initialize CSV on startup
 init_csv()
 
@@ -534,5 +800,11 @@ if __name__ == '__main__':
     else:
         print(f"   Sender: {EMAIL_CONFIG.get('sender_email', 'Not configured')}")
         print("   Method: SMTP")
+    print("\n🔄 Bloomerang CRM: " + ("ENABLED" if BLOOMERANG_CONFIG.get('enabled') else "DISABLED"))
+    if BLOOMERANG_CONFIG.get('enabled'):
+        print(f"   API URL: {BLOOMERANG_CONFIG.get('api_url', 'Not configured')}")
+        print(f"   API Key: {'Configured' if BLOOMERANG_CONFIG.get('api_key') else 'Not configured'}")
+        if not BLOOMERANG_CONFIG.get('verify_ssl', True):
+            print("   ⚠️  SSL Verification: DISABLED (for local testing only!)")
     print("=" * 50)
     app.run(debug=DEBUG, host='0.0.0.0', port=PORT)

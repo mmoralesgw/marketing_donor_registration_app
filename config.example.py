@@ -44,6 +44,16 @@ ORGANIZATION_INFO = {
 # CSV File Settings
 CSV_FILE = 'donors.csv'
 
+# ============================================
+# BLOOMERANG CRM INTEGRATION
+# ============================================
+BLOOMERANG_CONFIG = {
+    'enabled': True,  # Set to False to disable Bloomerang integration
+    'api_key': 'your-bloomerang-api-key-here',
+    'api_url': 'https://api.bloomerang.co/v2',
+    'verify_ssl': True  # Set to False for local Windows testing, True for production
+}
+
 # Flask Settings
 DEBUG = True
 PORT = 5000
