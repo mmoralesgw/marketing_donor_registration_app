@@ -158,6 +158,24 @@ Value: gw-appdev@GoodwillMiami.org
 - App will restart
 
 ---
+##in the networking tab : 
+GitHub Actions uses dynamic IP addresses that change frequently, so adding specific IPs isn't practical. Instead, here are your best options:
+
+Option 1: Allow All GitHub Actions (Recommended)
+
+In Azure Portal:
+
+Go to your App Service → "Networking" → "Access restriction"
+Click on the "Advanced tool site (SCM)" tab (this is important!)
+Click "Add rule"
+Configure:
+Name: Allow GitHub Actions
+Action: Allow
+Priority: 100
+Type: Service Tag
+Service Tag: AzureCloud or GitHub
+Click "Add rule"
+
 
 ## Step 5: Verify Deployment
 
