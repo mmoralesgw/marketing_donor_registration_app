@@ -66,7 +66,7 @@ git add .
 
 ### 4. Commit
 ```bash
-git commit -m "Initial commit: Marketing Donor Management System"
+git commit -m "Initial commit: Marketing Donor Registration Form"
 ```
 
 ### 5. Create GitHub Repo

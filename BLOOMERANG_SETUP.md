@@ -1,6 +1,6 @@
 # Bloomerang CRM Integration Guide
 
-The Marketing Donor Management System now automatically syncs donors to Bloomerang CRM.
+The Marketing Donor Registration Form now automatically syncs donors to Bloomerang CRM.
 
 ## Features
 

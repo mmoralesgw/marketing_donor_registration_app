@@ -1,6 +1,6 @@
 # Email Settings Guide
 
-The Marketing Donor Management System now includes a **Settings Page** where you can customize the email message sent to donors.
+The Marketing Donor Registration Form now includes a **Settings Page** where you can customize the email message sent to donors.
 
 ## Accessing Settings
 
