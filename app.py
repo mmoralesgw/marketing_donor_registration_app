@@ -126,7 +126,7 @@ ORGANIZATION_INFO['tax_id'] = os.getenv('ORG_TAX_ID', ORGANIZATION_INFO.get('tax
 ORGANIZATION_INFO['phone'] = os.getenv('ORG_PHONE', ORGANIZATION_INFO.get('phone', ''))
 ORGANIZATION_INFO['email'] = os.getenv('ORG_EMAIL', ORGANIZATION_INFO.get('email', ''))
 
-app = Flask(__name__, static_folder='static', static_url_path='/static')
+app = Flask(__name__)
 CORS(app)
 
 def init_csv():
@@ -666,9 +666,15 @@ def index():
     return send_file('index.html')
 
 @app.route('/settings')
-def settings():
+def settings_page():
     """Serve the settings page"""
     return send_file('settings.html')
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    """Serve static files (images, etc.)"""
+    from flask import send_from_directory
+    return send_from_directory('static', filename)
 
 # Email template storage file
 EMAIL_TEMPLATE_FILE = 'email_template.txt'
