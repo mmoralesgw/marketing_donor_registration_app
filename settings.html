@@ -219,6 +219,37 @@
             white-space: pre-wrap;
             color: #333;
         }
+
+        .location-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .location-name {
+            color: #333;
+            font-size: 14px;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -229,6 +260,35 @@
         </div>
 
         <div id="message" class="message"></div>
+
+        <div class="section">
+            <h2 class="section-title">Form Title</h2>
+            
+            <label for="formTitle">Customize the form title:</label>
+            <input type="text" id="formTitle" placeholder="Marketing Donor Registration Form" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 10px;">
+            
+            <button id="saveTitleBtn" style="background: linear-gradient(135deg, #667eea 0%, #544ba2 100%); color: white; padding: 12px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s;">💾 Save Title</button>
+            
+            <p class="help-text">
+                This title will appear at the top of the donor registration form.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Donation Locations</h2>
+            
+            <label>Manage donation locations:</label>
+            <div id="locationsList" style="margin-bottom: 15px;"></div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="newLocation" placeholder="Enter new location name" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+                <button id="addLocationBtn" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">+ Add Location</button>
+            </div>
+            
+            <p class="help-text">
+                These locations will appear in the dropdown menu on the donor form.
+            </p>
+        </div>
 
         <div class="section">
             <h2 class="section-title">Email Message Template</h2>
@@ -275,6 +335,11 @@
         const saveBtn = document.getElementById('saveBtn');
         const resetBtn = document.getElementById('resetBtn');
         const messageDiv = document.getElementById('message');
+        const locationsList = document.getElementById('locationsList');
+        const newLocationInput = document.getElementById('newLocation');
+        const addLocationBtn = document.getElementById('addLocationBtn');
+        const formTitleInput = document.getElementById('formTitle');
+        const saveTitleBtn = document.getElementById('saveTitleBtn');
 
         // Load current template
         async function loadTemplate() {
@@ -382,8 +447,159 @@
         saveBtn.addEventListener('click', saveTemplate);
         resetBtn.addEventListener('click', resetTemplate);
 
-        // Load template on page load
+        // Load locations
+        async function loadLocations() {
+            try {
+                const response = await fetch(`${API_URL}/locations`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayLocations(data.locations);
+                } else {
+                    showMessage('Failed to load locations', 'error');
+                }
+            } catch (error) {
+                showMessage('Error loading locations: ' + error.message, 'error');
+            }
+        }
+
+        // Display locations
+        function displayLocations(locations) {
+            locationsList.innerHTML = '';
+            locations.forEach(location => {
+                const div = document.createElement('div');
+                div.className = 'location-item';
+                div.innerHTML = `
+                    <span class="location-name">${location}</span>
+                    <button class="btn-delete" onclick="deleteLocation('${location.replace(/'/g, "\\'")}')">🗑️ Delete</button>
+                `;
+                locationsList.appendChild(div);
+            });
+        }
+
+        // Add location
+        async function addLocation() {
+            const location = newLocationInput.value.trim();
+            if (!location) {
+                showMessage('Please enter a location name', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/locations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ location })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    newLocationInput.value = '';
+                    loadLocations();
+                    showMessage('✅ Location added successfully!', 'success');
+                } else {
+                    showMessage('❌ Failed to add location: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error adding location: ' + error.message, 'error');
+            }
+        }
+
+        // Delete location
+        window.deleteLocation = async function(location) {
+            if (!confirm(`Are you sure you want to delete "${location}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/locations`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ location })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    loadLocations();
+                    showMessage('✅ Location deleted successfully!', 'success');
+                } else {
+                    showMessage('❌ Failed to delete location: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error deleting location: ' + error.message, 'error');
+            }
+        };
+
+        // Event listeners for locations
+        addLocationBtn.addEventListener('click', addLocation);
+        newLocationInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addLocation();
+            }
+        });
+
+        // Load form title
+        async function loadFormTitle() {
+            try {
+                const response = await fetch(`${API_URL}/form-title`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    formTitleInput.value = data.title;
+                }
+            } catch (error) {
+                console.error('Error loading form title:', error);
+            }
+        }
+
+        // Save form title
+        async function saveFormTitle() {
+            const title = formTitleInput.value.trim();
+            if (!title) {
+                showMessage('Title cannot be empty', 'error');
+                return;
+            }
+
+            saveTitleBtn.textContent = '💾 Saving...';
+            saveTitleBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/form-title`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ title })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('✅ Form title saved successfully!', 'success');
+                } else {
+                    showMessage('❌ Failed to save title: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error saving title: ' + error.message, 'error');
+            } finally {
+                saveTitleBtn.textContent = '💾 Save Title';
+                saveTitleBtn.disabled = false;
+            }
+        }
+
+        // Event listener for form title
+        saveTitleBtn.addEventListener('click', saveFormTitle);
+
+        // Load template, locations, and form title on page load
         loadTemplate();
+        loadLocations();
+        loadFormTitle();
     </script>
 </body>
 </html>

@@ -285,6 +285,10 @@
 </head>
 <body>
     <div class="container">
+        <div style="display: flex; justify-content: center; align-items: center; gap: 30px; margin-bottom: 20px; padding: 20px; background: white; border-radius: 8px;">
+            <img src="/static/goodwill_gulliver_logo.png" alt="Goodwill & Gulliver Prep" style="height: 120px; width: auto;">
+            <img src="/static/onda_verde_logo.png" alt="Onda Verde" style="height: 120px; width: auto;">
+        </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h1>Marketing Donor Registration Form</h1>
             <a href="settings.html" style="background: #6c757d; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; transition: all 0.3s;" onmouseover="this.style.background='#5a6268'" onmouseout="this.style.background='#6c757d'">⚙️ Settings</a>
@@ -388,7 +392,11 @@
                     </div>
                     <div class="form-group">
                         <label>Donation Location <span class="required">*</span></label>
-                        <input type="text" id="location" name="location" placeholder="e.g., Main Office, Drop-off Center" required>
+                        <select id="location" name="location" required>
+                            <option value="">Select Location</option>
+                            <option value="Gulliver Prep | Marian C. Krutulis PK-8 Campus">Gulliver Prep | Marian C. Krutulis PK-8 Campus</option>
+                            <option value="Gulliver Prep | Upper School Campus">Gulliver Prep | Upper School Campus</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -416,6 +424,49 @@
 
         // Set today's date as default
         document.getElementById('donationDate').valueAsDate = new Date();
+
+        // Load locations from API
+        async function loadLocations() {
+            try {
+                const response = await fetch(`${API_URL}/locations`);
+                const data = await response.json();
+                
+                if (data.success && data.locations) {
+                    const locationSelect = document.getElementById('location');
+                    // Clear existing options except the first one
+                    locationSelect.innerHTML = '<option value="">Select Location</option>';
+                    
+                    // Add locations from API
+                    data.locations.forEach(location => {
+                        const option = document.createElement('option');
+                        option.value = location;
+                        option.textContent = location;
+                        locationSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading locations:', error);
+            }
+        }
+
+        // Load form title from API
+        async function loadFormTitle() {
+            try {
+                const response = await fetch(`${API_URL}/form-title`);
+                const data = await response.json();
+                
+                if (data.success && data.title) {
+                    document.querySelector('h1').textContent = data.title;
+                    document.title = data.title;
+                }
+            } catch (error) {
+                console.error('Error loading form title:', error);
+            }
+        }
+
+        // Load locations and title on page load
+        loadLocations();
+        loadFormTitle();
 
         // Toggle merchandise options
         merchandiseRadio.addEventListener('change', function() {

@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import csv
+import json
 import os
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
@@ -125,7 +126,7 @@ ORGANIZATION_INFO['tax_id'] = os.getenv('ORG_TAX_ID', ORGANIZATION_INFO.get('tax
 ORGANIZATION_INFO['phone'] = os.getenv('ORG_PHONE', ORGANIZATION_INFO.get('phone', ''))
 ORGANIZATION_INFO['email'] = os.getenv('ORG_EMAIL', ORGANIZATION_INFO.get('email', ''))
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 CORS(app)
 
 def init_csv():
@@ -748,6 +749,148 @@ def reset_email_template():
             return jsonify({'success': True, 'template': default_template})
         else:
             return jsonify({'success': False, 'message': 'Failed to reset template'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Location Management
+LOCATIONS_FILE = 'donation_locations.json'
+FORM_TITLE_FILE = 'form_title.txt'
+
+def load_locations():
+    """Load locations from file"""
+    try:
+        if os.path.exists(LOCATIONS_FILE):
+            with open(LOCATIONS_FILE, 'r') as f:
+                return json.load(f)
+        else:
+            # Default locations
+            return [
+                "Gulliver Prep | Marian C. Krutulis PK-8 Campus",
+                "Gulliver Prep | Upper School Campus"
+            ]
+    except Exception as e:
+        print(f"Error loading locations: {e}")
+        return [
+            "Gulliver Prep | Marian C. Krutulis PK-8 Campus",
+            "Gulliver Prep | Upper School Campus"
+        ]
+
+def save_locations(locations):
+    """Save locations to file"""
+    try:
+        with open(LOCATIONS_FILE, 'w') as f:
+            json.dump(locations, f, indent=2)
+        return True
+    except Exception as e:
+        print(f"Error saving locations: {e}")
+        return False
+
+@app.route('/api/locations', methods=['GET'])
+def get_locations():
+    """Get all donation locations"""
+    try:
+        locations = load_locations()
+        return jsonify({'success': True, 'locations': locations})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/locations', methods=['POST'])
+def add_location():
+    """Add a new donation location"""
+    try:
+        data = request.json
+        location = data.get('location', '').strip()
+        
+        if not location:
+            return jsonify({'success': False, 'message': 'Location name cannot be empty'}), 400
+        
+        locations = load_locations()
+        
+        if location in locations:
+            return jsonify({'success': False, 'message': 'Location already exists'}), 400
+        
+        locations.append(location)
+        
+        if save_locations(locations):
+            return jsonify({'success': True, 'message': 'Location added successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to save location'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/locations', methods=['DELETE'])
+def delete_location():
+    """Delete a donation location"""
+    try:
+        data = request.json
+        location = data.get('location', '').strip()
+        
+        if not location:
+            return jsonify({'success': False, 'message': 'Location name cannot be empty'}), 400
+        
+        locations = load_locations()
+        
+        if location not in locations:
+            return jsonify({'success': False, 'message': 'Location not found'}), 404
+        
+        if len(locations) <= 1:
+            return jsonify({'success': False, 'message': 'Cannot delete the last location'}), 400
+        
+        locations.remove(location)
+        
+        if save_locations(locations):
+            return jsonify({'success': True, 'message': 'Location deleted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to save locations'}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# Form Title Management
+def load_form_title():
+    """Load form title from file"""
+    try:
+        if os.path.exists(FORM_TITLE_FILE):
+            with open(FORM_TITLE_FILE, 'r', encoding='utf-8') as f:
+                return f.read().strip()
+        else:
+            return "Marketing Donor Registration Form"
+    except Exception as e:
+        print(f"Error loading form title: {e}")
+        return "Marketing Donor Registration Form"
+
+def save_form_title(title):
+    """Save form title to file"""
+    try:
+        with open(FORM_TITLE_FILE, 'w', encoding='utf-8') as f:
+            f.write(title)
+        return True
+    except Exception as e:
+        print(f"Error saving form title: {e}")
+        return False
+
+@app.route('/api/form-title', methods=['GET'])
+def get_form_title():
+    """Get form title"""
+    try:
+        title = load_form_title()
+        return jsonify({'success': True, 'title': title})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/form-title', methods=['POST'])
+def update_form_title():
+    """Update form title"""
+    try:
+        data = request.json
+        title = data.get('title', '').strip()
+        
+        if not title:
+            return jsonify({'success': False, 'message': 'Title cannot be empty'}), 400
+        
+        if save_form_title(title):
+            return jsonify({'success': True, 'message': 'Form title saved successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to save form title'}), 500
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 

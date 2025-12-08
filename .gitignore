@@ -14,6 +14,8 @@ config.py
 donors.csv
 *.pdf
 email_template.txt
+donation_locations.json
+form_title.txt
 
 # IDEgit commit -m "Initial commit: Marketing Donor Registration Form"
 .vscode/
