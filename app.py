@@ -367,50 +367,81 @@ def generate_pdf_receipt(data):
     width, height = letter
     
     # Header
-    c.setFont("Helvetica-Bold", 24)
-    c.drawString(1*inch, height - 1*inch, "DONATION RECEIPT")
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(1*inch, height - 0.8*inch, "This is your Tax Receipt")
     
     # Organization info
     c.setFont("Helvetica", 10)
-    c.drawString(1*inch, height - 1.3*inch, ORGANIZATION_INFO['name'])
-    c.drawString(1*inch, height - 1.5*inch, ORGANIZATION_INFO['address'])
-    c.drawString(1*inch, height - 1.7*inch, f"Tax ID: {ORGANIZATION_INFO['tax_id']}")
+    c.drawString(1*inch, height - 1.1*inch, "Goodwill Industries of South Florida, Inc.")
+    c.drawString(1*inch, height - 1.3*inch, ORGANIZATION_INFO['address'])
     
-    # Receipt details
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(1*inch, height - 2.2*inch, "Receipt Details:")
+    # Tax acknowledgment
+    donation_date = datetime.strptime(data['donationDate'], '%Y-%m-%d').strftime('%m/%d/%Y')
+    c.setFont("Helvetica", 11)
+    y_position = height - 1.7*inch
+    
+    c.drawString(1*inch, y_position, f"Goodwill Industries of South Florida, Inc. acknowledges that a non-cash donation")
+    y_position -= 0.2*inch
+    c.drawString(1*inch, y_position, f"was received on {donation_date}.")
+    y_position -= 0.3*inch
+    
+    # 501(c)(3) statement
+    c.drawString(1*inch, y_position, "Goodwill Industries of South Florida, Inc is a 501(c)(3) non-profit organization.")
+    y_position -= 0.2*inch
+    c.drawString(1*inch, y_position, "Your donations are tax deductible to the fullest extent of the law.")
+    y_position -= 0.2*inch
+    c.drawString(1*inch, y_position, "No goods or services were provided in exchange for this donation.")
+    y_position -= 0.4*inch
+    
+    # Itemized donations
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(1*inch, y_position, "For your records, below please find your itemized donation(s):")
+    y_position -= 0.3*inch
     
     c.setFont("Helvetica", 11)
-    y_position = height - 2.5*inch
+    if data['donationType'] == 'merchandise' and data.get('merchandiseItems'):
+        for item in data['merchandiseItems']:
+            c.drawString(1.2*inch, y_position, f"• {item}")
+            y_position -= 0.2*inch
+    else:
+        c.drawString(1.2*inch, y_position, f"• {data['donationType'].capitalize()}")
+        y_position -= 0.2*inch
     
-    details = [
-        f"Receipt Date: {datetime.now().strftime('%B %d, %Y')}",
-        f"Donation Date: {datetime.strptime(data['donationDate'], '%Y-%m-%d').strftime('%B %d, %Y')}",
-        "",
-        "Donor Information:",
+    y_position -= 0.2*inch
+    
+    # IRS regulation notice
+    c.setFont("Helvetica-Oblique", 10)
+    c.drawString(1*inch, y_position, "IRS Regulations prohibit charitable organizations from establishing or affirming")
+    y_position -= 0.2*inch
+    c.drawString(1*inch, y_position, "the value of contributions.")
+    y_position -= 0.5*inch
+    
+    # Donor Information section
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(1*inch, y_position, "Donor Information:")
+    y_position -= 0.3*inch
+    
+    c.setFont("Helvetica", 10)
+    donor_info = [
         f"Name: {data['firstName']} {data['lastName']}",
         f"Email: {data['email']}",
         f"Phone: {data['phone']}",
         f"Address: {data['address']}",
-        "",
-        "Donation Information:",
-        f"Type: {data['donationType'].capitalize()}",
+        f"Location: {data['location']}"
     ]
     
-    if data['donationType'] == 'merchandise' and data.get('merchandiseItems'):
-        details.append(f"Items: {', '.join(data['merchandiseItems'])}")
-    
-    details.append(f"Location: {data['location']}")
-    
-    for line in details:
+    for line in donor_info:
         c.drawString(1*inch, y_position, line)
-        y_position -= 0.25*inch
+        y_position -= 0.2*inch
     
-    # Footer - use Helvetica-Oblique instead of Helvetica-Italic
+    # Footer
     c.setFont("Helvetica-Oblique", 9)
-    c.drawString(1*inch, 1.5*inch, "Thank you for your generous donation!")
-    c.drawString(1*inch, 1.3*inch, "This receipt is for your tax records.")
-    c.drawString(1*inch, 1.1*inch, "Please consult with a tax professional regarding deductibility.")
+    c.drawString(1*inch, 1.2*inch, "Thank you for your generous donation!")
+    c.drawString(1*inch, 1.0*inch, "Please consult with a tax professional regarding deductibility.")
+    
+    # Receipt date at bottom
+    c.setFont("Helvetica", 8)
+    c.drawString(1*inch, 0.7*inch, f"Receipt Generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}")
     
     c.save()
     buffer.seek(0)
