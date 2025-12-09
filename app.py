@@ -707,8 +707,7 @@ def serve_static(filename):
     from flask import send_from_directory
     return send_from_directory('static', filename)
 
-# Email template storage file
-EMAIL_TEMPLATE_FILE = 'email_template.txt'
+# Email template storage file (will be redefined below with persistent path)
 
 def get_default_email_template():
     """Get the default email template"""
@@ -790,8 +789,11 @@ def reset_email_template():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 # Location Management
-LOCATIONS_FILE = 'donation_locations.json'
-FORM_TITLE_FILE = 'form_title.txt'
+# Use /home directory on Azure (persists across deployments) or local directory
+PERSISTENT_DIR = '/home' if os.path.exists('/home/site/wwwroot') else '.'
+LOCATIONS_FILE = os.path.join(PERSISTENT_DIR, 'donation_locations.json')
+FORM_TITLE_FILE = os.path.join(PERSISTENT_DIR, 'form_title.txt')
+EMAIL_TEMPLATE_FILE = os.path.join(PERSISTENT_DIR, 'email_template.txt')
 
 def load_locations():
     """Load locations from file"""
