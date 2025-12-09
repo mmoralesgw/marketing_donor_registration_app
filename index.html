@@ -538,13 +538,13 @@
                     
                     // Bloomerang status
                     if (result.bloomerangSynced) {
-                        message += '🔄 Synced to Bloomerang CRM\n';
+                        message += '';
                     } else if (result.bloomerangMessage) {
                         message += `⚠️ Bloomerang: ${result.bloomerangMessage}\n`;
                     }
                     
                     // CSV status
-                    message += '💾 Saved to CSV file';
+                    message += '';
                     
                     successMessage.textContent = message;
                     successMessage.style.whiteSpace = 'pre-line';
