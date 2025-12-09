@@ -892,10 +892,10 @@ def load_form_title():
             with open(FORM_TITLE_FILE, 'r', encoding='utf-8') as f:
                 return f.read().strip()
         else:
-            return "Marketing Donor Registration Form"
+            return "Goodwill Donated Goods Form"
     except Exception as e:
         print(f"Error loading form title: {e}")
-        return "Marketing Donor Registration Form"
+        return "Goodwill Donated Goods Form"
 
 def save_form_title(title):
     """Save form title to file"""

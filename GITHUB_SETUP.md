@@ -43,7 +43,7 @@ git add .
 ### 4. Commit
 
 ```bash
-git commit -m "Initial commit: Marketing Donor Registration Form"
+git commit -m "Initial commit: Goodwill Donated Goods Form"
 ```
 
 ### 5. Create GitHub Repository
@@ -51,7 +51,7 @@ git commit -m "Initial commit: Marketing Donor Registration Form"
 1. Go to https://github.com
 2. Click "New repository"
 3. Name: `donor-management-system` (or your choice)
-4. Description: "Marketing Donor Registration Form for Goodwill South Florida"
+4. Description: "Goodwill Donated Goods Form for Goodwill South Florida"
 5. Choose: **Private** (recommended) or Public
 6. Don't initialize with README (you already have one)
 7. Click "Create repository"

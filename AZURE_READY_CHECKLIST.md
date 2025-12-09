@@ -2,7 +2,7 @@
 
 ## Status: **READY TO DEPLOY** 🚀
 
-Your Marketing Donor Registration Form has been tested and is ready for Azure deployment!
+Your Goodwill Donated Goods Form has been tested and is ready for Azure deployment!
 
 ---
 

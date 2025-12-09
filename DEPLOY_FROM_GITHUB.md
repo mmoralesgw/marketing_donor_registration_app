@@ -328,7 +328,7 @@ Azure will automatically deploy the changes!
 
 ## 🎉 You're Done!
 
-Your Marketing Donor Registration Form is now:
+Your Goodwill Donated Goods Form is now:
 - ✅ Deployed to Azure
 - ✅ Connected to GitHub for automatic deployments
 - ✅ Configured with all integrations
